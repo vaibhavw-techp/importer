@@ -1,0 +1,13 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.importer.repository.LogRepository">
+
+    <!-- Define the saveStudentLog SQL statement -->
+    <insert id="saveStudentLog" parameterType="com.demo.importer.entity.LogEntity">
+        INSERT INTO student_log (name, email, status_code, timestamp, status_message)
+        VALUES (#{log.name}, #{log.email}, #{log.statusCode}, #{log.timestamp}, #{log.statusMessage})
+    </insert>
+
+</mapper>
