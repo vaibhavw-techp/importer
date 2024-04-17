@@ -21,8 +21,8 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<StudentDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students, @RequestHeader("Authorization") String token) {
-        return studentService.saveDummyStudent2(students,token);
+    public List<StudentDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) {
+        return studentService.saveStudent(students);
     }
 
 }

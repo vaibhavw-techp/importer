@@ -12,7 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -34,21 +38,16 @@ public class StudentService {
     @Autowired
     private LogMapper logMapper;
 
-    @Transactional
-    public List<StudentDisplayDto>  saveDummyStudent2(List<StudentAdditionDto> studentAdditionDtos, String token) {
-        return saveDummyStudent(studentAdditionDtos,token);
-    }
-
-    public List<StudentDisplayDto>  saveDummyStudent(List<StudentAdditionDto> studentAdditionDtos, String token) {
-        return saveStudent(studentAdditionDtos,token);
-    }
-
-
-    public List<StudentDisplayDto> saveStudent(List<StudentAdditionDto> students, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
+    public List<StudentDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<StudentDisplayDto> studentDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
 
         for (StudentAdditionDto student : students) {
             try {
@@ -56,18 +55,13 @@ public class StudentService {
                 ResponseEntity<StudentDisplayDto> response = restTemplate.postForEntity(ADD_STUDENT_URL, requestEntity, StudentDisplayDto.class);
                 studentDisplayDtos.add(response.getBody());
                 saveLog(student, HttpStatus.OK.value(), "Successful");
-            } catch (HttpClientErrorException ex) {
-                saveLog(student, ex.getStatusCode().value(), ex.getMessage());
-                throw ex;
-            } catch (HttpServerErrorException ex) {
-                saveLog(student, ex.getStatusCode().value(), ex.getMessage());
-                throw ex;
+            } catch (HttpClientErrorException | HttpServerErrorException ex) {
+                int statusCode = ex.getStatusCode().value();
+                saveLog(student, statusCode, HttpStatus.valueOf(statusCode).getReasonPhrase());
             } catch (ResourceAccessException ex) {
-                saveLog(student, HttpStatus.SERVICE_UNAVAILABLE.value(), "Service Unavailable");
-                throw ex;
+                saveLog(student, HttpStatus.SERVICE_UNAVAILABLE.value(), HttpStatus.valueOf(503).getReasonPhrase());
             } catch (Exception ex) {
-                saveLog(student, HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error");
-                throw new StudentSaveException("An unexpected error occurred while saving student: " + ex.getMessage());
+                saveLog(student, HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.valueOf(500).getReasonPhrase());
             }
         }
 
