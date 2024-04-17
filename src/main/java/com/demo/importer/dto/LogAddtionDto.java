@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class LogAddtionDto {
-    private Long id;
     private String name;
     private String email;
     private int statusCode;
