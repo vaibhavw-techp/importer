@@ -2,8 +2,6 @@ package com.demo.importer.service;
 
 
 import com.demo.importer.dto.StudentAdditionDto;
-import com.demo.importer.mapstruct.LogMapper;
-import com.demo.importer.repository.LogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -17,12 +15,10 @@ import java.util.concurrent.CompletableFuture;
 public class StudentService {
 
     @Autowired
-    private LogMapper logMapper;
-    @Autowired
-    private KafkaTemplate<String, List<StudentAdditionDto>> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     public void saveStudent(List<StudentAdditionDto> students) {
-        CompletableFuture<SendResult<String, List<StudentAdditionDto>>> future = kafkaTemplate.send("student-topic", students);
+        CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send("student", students);
 
         future.whenComplete((result,ex)->{
             if(ex == null) {
