@@ -1,6 +1,8 @@
 package com.demo.importer.controller;
 
 import com.demo.importer.dto.StudentAdditionDto;
+import com.demo.importer.dto.StudentDisplayDto;
+import com.demo.importer.exceptions.ResourceAdditionException;
 import com.demo.importer.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,12 +21,11 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String addStudent(@RequestBody List<StudentAdditionDto> students) {
+    public List<StudentDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) {
         try {
-             studentService.saveStudent(students);
-             return "Successful";
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to add students", ex);
+             return studentService.saveStudent(students);
+        } catch (ResourceAdditionException ex) {
+            throw new ResourceAdditionException();
         }
     }
 

@@ -2,6 +2,8 @@ package com.demo.importer.service;
 
 
 import com.demo.importer.dto.StudentAdditionDto;
+import com.demo.importer.dto.StudentDisplayDto;
+import com.demo.importer.mapstruct.StudentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,10 +20,13 @@ public class StudentService {
     @Autowired
     private KafkaTemplate<String, StudentAdditionDto> kafkaTemplate;
 
+    @Autowired
+    private StudentMapper studentMapper;
+
     @Value("${topic.student}")
     private String studentTopic;
 
-    public void saveStudent(List<StudentAdditionDto> students) {
+    public List<StudentDisplayDto> saveStudent(List<StudentAdditionDto> students) {
 
         for (StudentAdditionDto student : students) {
             CompletableFuture<SendResult<String, StudentAdditionDto>> future = kafkaTemplate.send(studentTopic, student);
@@ -34,8 +39,9 @@ public class StudentService {
             });
         }
 
+        return studentMapper.mapStudentAdditionDtosToStudentDisplayDtos(students);
     }
 
-
 }
+
 
