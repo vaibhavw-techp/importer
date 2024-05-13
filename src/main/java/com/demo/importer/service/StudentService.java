@@ -21,7 +21,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.List;
 @Service
 public class StudentService {
 
-    @Value("${student.addition.url}")
+    @Value("${consumer.service.student.addition.url}")
     private String STUDENT_ADD_URL;
     @Autowired
     private LogRepository logRepository;
