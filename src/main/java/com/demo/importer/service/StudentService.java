@@ -5,6 +5,7 @@ import com.demo.importer.dto.StudentAdditionDto;
 import com.demo.importer.dto.StudentDisplayDto;
 import com.demo.importer.dto.LogAddtionDto;
 import com.demo.importer.entity.LogEntity;
+import com.demo.importer.exceptions.IllegalTokenException;
 import com.demo.importer.mapstruct.LogMapper;
 import com.demo.importer.repository.LogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +21,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +29,8 @@ import java.util.List;
 @Service
 public class StudentService {
 
-    @Value("${post.student}")
-    private String ADD_STUDENT_URL;
+    @Value("${student.addition.url}")
+    private String STUDENT_ADD_URL;
     @Autowired
     private LogRepository logRepository;
     @Autowired
@@ -39,9 +40,7 @@ public class StudentService {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
+        String token = extractToken(); //Extracted jwt token using SecurityContext
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -49,22 +48,36 @@ public class StudentService {
         for (StudentAdditionDto student : students) {
             try {
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
-                ResponseEntity<StudentDisplayDto> response = restTemplate.postForEntity(ADD_STUDENT_URL, requestEntity, StudentDisplayDto.class);
-                LogEntity logEntity = saveLog(student, HttpStatus.OK.value(), "Successful");
-                logDisplayDtos.add(logMapper.mapLogEntityToLogDisplayDto(logEntity));
+                restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
+                handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);
             } catch (HttpClientErrorException | HttpServerErrorException ex) {
                 int statusCode = ex.getStatusCode().value();
-                LogEntity logEntity = saveLog(student, statusCode, HttpStatus.valueOf(statusCode).getReasonPhrase());
-                logDisplayDtos.add(logMapper.mapLogEntityToLogDisplayDto(logEntity));
+                handleResponse(student, statusCode, HttpStatus.valueOf(statusCode).getReasonPhrase(), logDisplayDtos);
             } catch (Exception ex) {
-                int statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
-                String errorMessage = "Internal Server Error: " + ex.getMessage();
-                LogEntity logEntity = saveLog(student, statusCode, errorMessage);
-                logDisplayDtos.add(logMapper.mapLogEntityToLogDisplayDto(logEntity));
+                handleResponse(student, HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error: " + ex.getMessage(), logDisplayDtos);
             }
         }
 
         return logDisplayDtos;
+    }
+
+    private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
+        LogEntity logEntity = saveLog(student, statusCode, status);
+        logDisplayDtos.add(logMapper.mapLogEntityToLogDisplayDto(logEntity));
+    }
+
+    private String extractToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        String token = "";
+
+        if (principal instanceof Jwt) {
+            Jwt jwt = (Jwt) principal;
+            token = jwt.getTokenValue();
+        } else {
+            throw new IllegalTokenException("Error While Extracting JWT Token From Principal Object");
+        }
+        return token;
     }
 
     LogEntity saveLog(StudentAdditionDto student, int statusCode, String status) {

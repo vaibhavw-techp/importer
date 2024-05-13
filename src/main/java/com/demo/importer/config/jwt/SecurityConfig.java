@@ -25,7 +25,7 @@ import javax.crypto.SecretKey;
 @EnableMethodSecurity(jsr250Enabled = true)
 public class SecurityConfig {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret.key}")
     private String secretKey;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
