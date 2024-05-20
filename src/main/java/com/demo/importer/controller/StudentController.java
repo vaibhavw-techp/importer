@@ -1,5 +1,6 @@
 package com.demo.importer.controller;
 
+import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
 import com.demo.importer.dto.StudentDisplayDto;
 import com.demo.importer.exceptions.ResourceAdditionException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/students")
@@ -21,7 +23,7 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<StudentDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) {
+    public List<LogDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) throws InterruptedException, ExecutionException {
         try {
              return studentService.saveStudent(students);
         } catch (ResourceAdditionException ex) {

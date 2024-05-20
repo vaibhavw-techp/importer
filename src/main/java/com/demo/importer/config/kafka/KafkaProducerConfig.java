@@ -18,10 +18,10 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
 
-    @Bean
-    public NewTopic createTopic() {
-        return new NewTopic("student",3, (short) 1);
-    }
+//    @Bean
+//    public NewTopic createTopic() {
+//        return new NewTopic("student",3, (short) 1);
+//    }
 
     @Bean
     public ProducerFactory<String, StudentAdditionDto> producerFactory()

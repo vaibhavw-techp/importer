@@ -12,4 +12,5 @@ public class LogDisplayDto {
     private LocalDateTime timestamp;
     private int statusCode;
     private String statusMessage;
+    private String source;
 }
