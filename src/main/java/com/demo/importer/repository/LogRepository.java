@@ -8,4 +8,6 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface LogRepository {
     void saveStudentLog(@Param("log") LogEntity log);
+    void updateTransferStateAndStatusCode(Long id, String transferState, Integer statusCode);
+    void updateCurrentState(Long id, String currentState);
 }

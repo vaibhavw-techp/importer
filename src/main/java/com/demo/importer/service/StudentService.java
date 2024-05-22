@@ -1,41 +1,32 @@
 package com.demo.importer.service;
 
+import com.demo.importer.dto.AckDto;
 import com.demo.importer.dto.LogAddtionDto;
-import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
-import com.demo.importer.dto.StudentDisplayDto;
+import com.demo.importer.dto.StudentEventLogDto;
 import com.demo.importer.entity.LogEntity;
 import com.demo.importer.mapstruct.LogMapper;
 import com.demo.importer.mapstruct.StudentMapper;
 import com.demo.importer.repository.LogRepository;
-import org.apache.kafka.common.errors.InterruptException;
-import org.apache.kafka.common.errors.TimeoutException;
-import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
 public class StudentService {
 
-    private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
-
     @Autowired
-    private KafkaTemplate<String, StudentAdditionDto> kafkaTemplate;
+    private KafkaTemplate<String, StudentEventLogDto> kafkaTemplate;
 
     @Autowired
     private LogRepository logRepository;
@@ -49,26 +40,35 @@ public class StudentService {
     @Value("${topic.student}")
     private String studentTopic;
 
-    public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
-        List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
+    List<Long> logIds = new ArrayList<>();
 
-        if (!isKafkaBrokerAvailable()) {
-            students.forEach(student -> handleResponse(student, 503, "Kafka broker is not available",logDisplayDtos));
-            return Collections.emptyList();
+    public List<Long> saveStudents(List<StudentAdditionDto> students) {
+
+        List<StudentEventLogDto> studentEventLogDtos = new ArrayList<>();
+
+        for(StudentAdditionDto student: students) {
+            LogEntity logEntity = saveLog(student, 0, "INITIAL STAGE");
+            StudentEventLogDto studentEventLogDto = new StudentEventLogDto(student.getName(),student.getEmail(),student.getAge(),logEntity.getId());
+            studentEventLogDtos.add(studentEventLogDto);
+            System.out.println(logEntity.getId()  + " Search this!");
+            logIds.add(logEntity.getId());
         }
 
-        for (StudentAdditionDto student : students) {
-            CompletableFuture<SendResult<String, StudentAdditionDto>> future = kafkaTemplate.send(studentTopic, student);
+        for (int i = 0; i < students.size(); i++) {
+            StudentEventLogDto student = studentEventLogDtos.get(i);
+            Long logId = logIds.get(i);
+
+            CompletableFuture<SendResult<String, StudentEventLogDto>> future = kafkaTemplate.send(studentTopic, student);
             future.whenComplete((result, ex) -> {
                 if (ex == null) {
-                    handleResponse(student, 200, "Send Message Successful", logDisplayDtos);
+                    logRepository.updateTransferStateAndStatusCode(logId, "SUCCESSFUL", 200);
                 } else {
-                    handleResponse(student, 500, "An unexpected exception occurred: " + ex.getMessage(),logDisplayDtos);
+                    logRepository.updateTransferStateAndStatusCode(logId, "FAILED", 500);
                 }
             });
         }
 
-        return logDisplayDtos;
+        return logIds;
     }
 
     private boolean isKafkaBrokerAvailable() {
@@ -79,15 +79,26 @@ public class StudentService {
         }
     }
 
-    private void handleResponse(StudentAdditionDto student, int statusCode, String statusMessage, List<LogDisplayDto> logDisplayDtos) {
-        LogEntity logEntity = saveLog(student, statusCode, statusMessage);
-        logDisplayDtos.add(logMapper.mapLogEntityToLogDisplayDto(logEntity));
-    }
-
-    private LogEntity saveLog(StudentAdditionDto student, int statusCode, String statusMessage) {
-        LogAddtionDto logDto = new LogAddtionDto(student.getName(), student.getEmail(), statusCode, LocalDateTime.now(), statusMessage,"Producer");
+    private LogEntity saveLog(StudentAdditionDto student, int statusCode, String transferState) {
+        LogAddtionDto logDto = new LogAddtionDto(student.getName(), student.getEmail(), statusCode, LocalDateTime.now(), transferState,"PENDING");
         LogEntity logEntity = logMapper.mapLogAdditionDtoToLogEntity(logDto);
         logRepository.saveStudentLog(logEntity);
+        System.out.println(logEntity);
         return logEntity;
     }
+
+    @KafkaListener(topics = "logTopic", groupId = "g-1", containerFactory = "studentListener")
+    public void receiveConsumerAcknowledgment(AckDto ackReceiveDto) {
+        Long logId = ackReceiveDto.getLogId();;
+        String currentState = ackReceiveDto.getCurrentState();
+
+        if(currentState.equals("SAVED")) {
+            logRepository.updateCurrentState(logId, currentState);
+        }
+        else {
+            logRepository.updateCurrentState(logId, currentState);
+        }
+
+    }
+
 }

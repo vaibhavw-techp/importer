@@ -11,6 +11,6 @@ public class LogDisplayDto {
     private String email;
     private LocalDateTime timestamp;
     private int statusCode;
-    private String statusMessage;
-    private String source;
+    private String transferState;
+    private String currentState;
 }

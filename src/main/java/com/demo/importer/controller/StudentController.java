@@ -1,8 +1,6 @@
 package com.demo.importer.controller;
 
-import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
-import com.demo.importer.dto.StudentDisplayDto;
 import com.demo.importer.exceptions.ResourceAdditionException;
 import com.demo.importer.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +21,9 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<LogDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) throws InterruptedException, ExecutionException {
+    public List<Long> addStudent(@RequestBody List<StudentAdditionDto> students) throws InterruptedException, ExecutionException {
         try {
-             return studentService.saveStudent(students);
+             return studentService.saveStudents(students);
         } catch (ResourceAdditionException ex) {
             throw new ResourceAdditionException();
         }

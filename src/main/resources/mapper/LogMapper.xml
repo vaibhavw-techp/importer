@@ -5,8 +5,20 @@
 <mapper namespace="com.demo.importer.repository.LogRepository">
 
     <insert id="saveStudentLog" parameterType="com.demo.importer.entity.LogEntity" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO student_log (name, email, status_code, timestamp, status_message, source)
-        VALUES (#{log.name}, #{log.email}, #{log.statusCode}, #{log.timestamp}, #{log.statusMessage}, #{log.source})
+        INSERT INTO student_log (name, email, status_code, timestamp, transfer_state, current_state)
+        VALUES (#{log.name}, #{log.email}, #{log.statusCode}, #{log.timestamp}, #{log.transferState}, #{log.currentState})
     </insert>
+
+    <update id="updateTransferStateAndStatusCode" parameterType="map">
+        UPDATE student_log
+        SET transfer_state = #{transferState}, status_code = #{statusCode}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateCurrentState" parameterType="map">
+        UPDATE student_log
+        SET current_state = #{currentState}
+        WHERE id = #{id}
+    </update>
 
 </mapper>
