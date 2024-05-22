@@ -3,23 +3,17 @@ package com.demo.importer.service;
 import com.demo.importer.dto.LogAddtionDto;
 import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
-import com.demo.importer.dto.StudentDisplayDto;
 import com.demo.importer.entity.LogEntity;
 import com.demo.importer.mapstruct.LogMapper;
 import com.demo.importer.mapstruct.StudentMapper;
 import com.demo.importer.repository.LogRepository;
-import org.apache.kafka.common.errors.InterruptException;
-import org.apache.kafka.common.errors.TimeoutException;
-import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -35,7 +29,7 @@ public class StudentService {
     private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
 
     @Autowired
-    private KafkaTemplate<String, StudentAdditionDto> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     private LogRepository logRepository;
@@ -58,7 +52,7 @@ public class StudentService {
         }
 
         for (StudentAdditionDto student : students) {
-            CompletableFuture<SendResult<String, StudentAdditionDto>> future = kafkaTemplate.send(studentTopic, student);
+            CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(studentTopic, student);
             future.whenComplete((result, ex) -> {
                 if (ex == null) {
                     handleResponse(student, 200, "Send Message Successful", logDisplayDtos);
@@ -90,4 +84,5 @@ public class StudentService {
         logRepository.saveStudentLog(logEntity);
         return logEntity;
     }
+
 }

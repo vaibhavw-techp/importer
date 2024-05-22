@@ -18,13 +18,8 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
 
-//    @Bean
-//    public NewTopic createTopic() {
-//        return new NewTopic("student",3, (short) 1);
-//    }
-
     @Bean
-    public ProducerFactory<String, StudentAdditionDto> producerFactory()
+    public ProducerFactory<String, Object> producerFactory()
     {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -37,7 +32,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, StudentAdditionDto> kafkaTemplate()
+    public KafkaTemplate<String, Object> kafkaTemplate()
     {
         return new KafkaTemplate<>(producerFactory());
     }

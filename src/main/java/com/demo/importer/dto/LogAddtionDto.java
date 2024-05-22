@@ -16,13 +16,4 @@ public class LogAddtionDto {
     private LocalDateTime timestamp;
     private String statusMessage;
     private String source;
-
-//    public LogAddtionDto(String name, String email, int value, LocalDateTime timestamp, String statusMessage, String source) {
-//        this.name = name;
-//        this.email = email;
-//        this.statusCode = value;
-//        this.timestamp = timestamp;
-//        this.statusMessage = statusMessage;
-//        this.source = source;
-//    }
 }
