@@ -13,6 +13,8 @@ public interface LogMapper {
     @Mapping(source = "email", target = "email")
     @Mapping(source = "statusCode", target = "statusCode")
     @Mapping(source = "timestamp", target = "timestamp")
+    @Mapping(source = "transferState", target = "transferState")
+    @Mapping(source = "currentState", target = "currentState")
     LogEntity mapLogAdditionDtoToLogEntity(LogAddtionDto logAdditionDto);
 
     @Mapping(source = "id", target = "logId")
@@ -20,6 +22,8 @@ public interface LogMapper {
     @Mapping(source = "statusCode", target = "statusCode")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "email", target = "email")
+    @Mapping(source = "transferState", target = "transferState")
+    @Mapping(source = "currentState", target = "currentState")
     LogDisplayDto mapLogEntityToLogDisplayDto(LogEntity logEntity);
 
 }
