@@ -14,11 +14,4 @@ public class ImporterApplication {
 		SpringApplication.run(ImporterApplication.class, args);
 	}
 
-	@Bean
-	ApplicationRunner applicationRunner(@Value("${jwt.secret.key}") String myJwtSecret, @Value("${spring.datasource.password}") String dbPass) {
-		return args -> {
-			System.out.println(" MY JWT: " + myJwtSecret + "\n" + dbPass);
-		};
-	}
-
 }
