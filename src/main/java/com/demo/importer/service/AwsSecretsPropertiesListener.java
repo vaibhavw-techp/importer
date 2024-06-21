@@ -18,25 +18,28 @@ import java.io.IOException;
 import java.util.Properties;
 
 @Component
-public class DbPropertiesListener implements ApplicationListener<ApplicationPreparedEvent> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbPropertiesListener.class);
+public class AwsSecretsPropertiesListener implements ApplicationListener<ApplicationPreparedEvent> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AwsSecretsPropertiesListener.class);
     private final ObjectMapper mapper = new ObjectMapper();
-
     private static final String AWS_SECRET_NAME = "intern/dev/importer";
     private static final String AWS_REGION = "eu-north-1";
     private static final String SPRING_DATASOURCE_PASSWORD = "spring.datasource.password";
     private static final String SECRET_KEY_DB_PASSWORD = "dev-db-password";
+    private static final String JWT_SECRET_KEY = "jwt.secret.key";
+    private static final String AWS_JWT_SECRET_KEY_ID = "jwt-secret";
 
     @Override
     public void onApplicationEvent(ApplicationPreparedEvent event) {
         String secretJson = getSecret();
         if (secretJson != null) {
             String dbPassword = getString(secretJson, SECRET_KEY_DB_PASSWORD);
+            String jwtSecret = getString(secretJson, AWS_JWT_SECRET_KEY_ID);
 
             ConfigurableEnvironment environment = event.getApplicationContext().getEnvironment();
             Properties props = new Properties();
             props.put(SPRING_DATASOURCE_PASSWORD, dbPassword);
-            environment.getPropertySources().addFirst(new PropertiesPropertySource("aws.secret.manager", props));
+            props.put(JWT_SECRET_KEY,jwtSecret);
+            environment.getPropertySources().addFirst(new PropertiesPropertySource("aws.secrets.manager", props));
         } else {
             LOGGER.error("Failed to retrieve secrets from AWS Secrets Manager");
         }
