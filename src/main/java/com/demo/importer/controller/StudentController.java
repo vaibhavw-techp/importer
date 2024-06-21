@@ -1,10 +1,10 @@
 package com.demo.importer.controller;
 
+import com.demo.importer.dto.AwsSecretsDto;
 import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
 import com.demo.importer.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,13 +19,9 @@ public class StudentController {
     @Autowired
     private StudentService studentService;
 
-    @Value("${hello.world}")
-    private String sysVal;
-
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<LogDisplayDto> addStudent(@RequestBody List<StudentAdditionDto> students) {
-        System.out.println(sysVal);
         return studentService.saveStudent(students);
     }
 
