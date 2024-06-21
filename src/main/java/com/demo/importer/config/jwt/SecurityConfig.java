@@ -1,7 +1,6 @@
 package com.demo.importer.config.jwt;
 
-
-
+import com.demo.importer.dto.AwsSecretsDto;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,19 +18,19 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true)
 public class SecurityConfig {
 
-    @Value("${jwt.secret.key}")
-    private String secretKey;
+    @Autowired
+    private AwsSecretsDto awsSecretsDto;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     @Autowired
     private JwtAccessDeniedHandler accessDeniedHandler;
-
     private static final String[] AUTH_WHITE_LIST = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
@@ -67,7 +66,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(secretKey)).macAlgorithm(MacAlgorithm.HS512).build();
+        String jwtSecretKey = "\"" + awsSecretsDto.getJwtSecretKey() + "\"";
+        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(jwtSecretKey)).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     private SecretKey stringToSecretKey(String secretKey) {
