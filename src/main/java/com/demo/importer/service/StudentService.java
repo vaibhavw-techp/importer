@@ -29,7 +29,7 @@ import java.util.List;
 public class StudentService {
 
     @Value("${consumer.service.student.addition.url}")
-    private String STUDENT_ADD_URL;
+    private String studentsBaseUrl;
     @Autowired
     private LogRepository logRepository;
     @Autowired
@@ -47,7 +47,7 @@ public class StudentService {
         for (StudentAdditionDto student : students) {
             try {
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
-                restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
+                restTemplate.postForEntity("http://"+studentsBaseUrl+"students", requestEntity, StudentDisplayDto.class);
                 handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);
             } catch (HttpClientErrorException | HttpServerErrorException ex) {
                 int statusCode = ex.getStatusCode().value();
