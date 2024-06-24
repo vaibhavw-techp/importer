@@ -1,7 +1,5 @@
 package com.demo.importer.config.jwt;
 
-
-
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +23,13 @@ import javax.crypto.SecretKey;
 @EnableMethodSecurity(jsr250Enabled = true)
 public class SecurityConfig {
 
-    @Value("${jwt.secret.key}")
-    private String secretKey;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     @Autowired
     private JwtAccessDeniedHandler accessDeniedHandler;
+
+    @Value("${jwt.secret.key}")
+    private String jwtSecretKey;
 
     private static final String[] AUTH_WHITE_LIST = {
             "/v3/api-docs/**",
@@ -67,7 +66,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(secretKey)).macAlgorithm(MacAlgorithm.HS512).build();
+        String jwtSecretKeyTemp = "\"" + jwtSecretKey + "\"";
+        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(jwtSecretKeyTemp)).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     private SecretKey stringToSecretKey(String secretKey) {

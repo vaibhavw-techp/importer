@@ -1,9 +1,6 @@
 package com.demo.importer.service;
 
-import com.demo.importer.dto.LogDisplayDto;
-import com.demo.importer.dto.StudentAdditionDto;
-import com.demo.importer.dto.StudentDisplayDto;
-import com.demo.importer.dto.LogAddtionDto;
+import com.demo.importer.dto.*;
 import com.demo.importer.entity.LogEntity;
 import com.demo.importer.exceptions.IllegalTokenException;
 import com.demo.importer.mapstruct.LogMapper;
