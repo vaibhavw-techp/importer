@@ -1,7 +1,5 @@
 package com.demo.importer.config.jwt;
 
-
-
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,7 @@ import javax.crypto.SecretKey;
 public class SecurityConfig {
 
     @Value("${jwt.secret.key}")
-    private String secretKey;
+    private String jwtSecretKey;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     @Autowired
@@ -67,7 +65,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(secretKey)).macAlgorithm(MacAlgorithm.HS512).build();
+        String jwtSecretKeyTemp = "\"" + jwtSecretKey + "\"";
+        return NimbusJwtDecoder.withSecretKey(stringToSecretKey(jwtSecretKeyTemp)).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     private SecretKey stringToSecretKey(String secretKey) {
