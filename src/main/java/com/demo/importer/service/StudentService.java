@@ -1,5 +1,6 @@
 package com.demo.importer.service;
 
+import com.demo.importer.config.aws.KMSUtil;
 import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
 import com.demo.importer.dto.StudentDisplayDto;
@@ -34,6 +35,8 @@ public class StudentService {
     private LogRepository logRepository;
     @Autowired
     private LogMapper logMapper;
+    @Autowired
+    private KMSUtil kmsUtil;
 
     public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
@@ -46,6 +49,9 @@ public class StudentService {
 
         for (StudentAdditionDto student : students) {
             try {
+                String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
+                student.setEmail(encryptedEmail);
+                System.out.println(student.getEmail());
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
                 restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
                 handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);

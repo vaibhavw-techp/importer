@@ -2,11 +2,10 @@ package com.demo.importer.config.aws;
 
 import java.util.Base64;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
@@ -14,18 +13,17 @@ import software.amazon.awssdk.services.kms.model.DecryptResponse;
 import software.amazon.awssdk.services.kms.model.EncryptRequest;
 import software.amazon.awssdk.services.kms.model.EncryptResponse;
 
-@RequiredArgsConstructor
-@Slf4j
 @Component
 public class KMSUtil {
 
-    private final KmsClient kmsClient;
+    @Autowired
+    private KmsClient kmsClient;
 
     @Value("${cmkKeyARN}")
     private String cmkKeyARN;
 
-    public String kmsEncrypt(String plainText) {
-        EncryptRequest encryptRequest = buildEncryptRequest(plainText);
+    public String kmsEncrypt(String plainData) {
+        EncryptRequest encryptRequest = buildEncryptRequest(plainData);
         EncryptResponse encryptResponse = kmsClient.encrypt(encryptRequest);
         SdkBytes cipherTextBytes =  encryptResponse.ciphertextBlob();
         byte[] base64EncodedValue = Base64.getEncoder().encode(cipherTextBytes.asByteArray());
@@ -40,8 +38,8 @@ public class KMSUtil {
         return decryptTest;
     }
 
-    private EncryptRequest buildEncryptRequest(String plainText) {
-        SdkBytes plainTextBytes= SdkBytes.fromUtf8String(plainText);
+    private EncryptRequest buildEncryptRequest(String plainData) {
+        SdkBytes plainTextBytes= SdkBytes.fromUtf8String(plainData);
         EncryptRequest encryptRequest = EncryptRequest.builder().keyId(cmkKeyARN)
                 .plaintext(plainTextBytes).build();
         return encryptRequest;
