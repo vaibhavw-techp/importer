@@ -51,7 +51,6 @@ public class StudentService {
             try {
                 String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
                 student.setEmail(encryptedEmail);
-                System.out.println(student.getEmail());
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
                 restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
                 handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);

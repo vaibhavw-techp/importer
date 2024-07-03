@@ -5,11 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import javax.sql.DataSource;
-import java.io.IOException;
 
 @Configuration
 public class DataSourceConfig {
@@ -20,21 +17,19 @@ public class DataSourceConfig {
     private String username;
     @Value("${dev.importer.datasource.driver-class-name}")
     private String driverClassName;
+    @Value("${dev.importer.datasource.password.encrypted}")
+    private String devDbPassword;
 
     @Autowired
     private KMSUtil kmsUtil;
-    @Autowired
-    private ResourceLoader dbPasswordLoader;
 
     @Bean
-    public DataSource dataSource() throws IOException {
-        Resource dbPasswordResource = dbPasswordLoader.getResource("classpath:dbPassword.txt");
-        String fileDbPasswordEncrypted = new String(dbPasswordResource.getInputStream().readAllBytes());
+    public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(driverClassName);
         dataSource.setUrl(url);
         dataSource.setUsername(username);
-        dataSource.setPassword(kmsUtil.kmsDecrypt(fileDbPasswordEncrypted));
+        dataSource.setPassword(kmsUtil.kmsDecrypt(devDbPassword));
         return dataSource;
     }
 }
