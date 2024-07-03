@@ -49,9 +49,7 @@ public class StudentService {
 
         for (StudentAdditionDto student : students) {
             try {
-                String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
-                student.setEmail(encryptedEmail);
-                System.out.println(student.getEmail());
+                encryptSensitiveAttributes(student);
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
                 restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
                 handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);
@@ -64,6 +62,12 @@ public class StudentService {
         }
 
         return logDisplayDtos;
+    }
+
+    private void encryptSensitiveAttributes(StudentAdditionDto student) {
+        String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
+        student.setEmail(encryptedEmail);
+        System.out.println(student.getEmail());
     }
 
     private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
