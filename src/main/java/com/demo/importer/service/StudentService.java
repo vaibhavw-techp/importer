@@ -38,19 +38,23 @@ public class StudentService {
     @Autowired
     private KMSUtil kmsUtil;
 
+    @Value("${spring.datasource.password.decrypted}")
+    private String xyx;
+
     public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        String token = extractToken(); //Extracted jwt token using SecurityContext
+        String token = extractToken();
+
+        System.out.println("\n\n\n"+xyx);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
         for (StudentAdditionDto student : students) {
             try {
-                String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
-                student.setEmail(encryptedEmail);
+                encryptSensitiveAttributes(student);
                 HttpEntity<StudentAdditionDto> requestEntity = new HttpEntity<>(student, headers);
                 restTemplate.postForEntity(STUDENT_ADD_URL, requestEntity, StudentDisplayDto.class);
                 handleResponse(student, HttpStatus.OK.value(), "Successful", logDisplayDtos);
@@ -63,6 +67,12 @@ public class StudentService {
         }
 
         return logDisplayDtos;
+    }
+
+    private void encryptSensitiveAttributes(StudentAdditionDto student) {
+        String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
+//        String tempSS = kmsUtil.kmsDecrypt(encryptedEmail);
+        student.setEmail(encryptedEmail);
     }
 
     private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
