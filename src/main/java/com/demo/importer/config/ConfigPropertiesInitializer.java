@@ -1,6 +1,6 @@
 package com.demo.importer.config;
 
-import com.demo.importer.config.aws.KMSUtil;
+import com.demo.importer.util.aws.KmsUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,18 +17,18 @@ import java.util.regex.Pattern;
 
 @Configuration
 @Slf4j
-@DependsOn("KMSUtil")
+@DependsOn("KmsUtil")
 public class ConfigPropertiesInitializer {
 
     @Autowired
-    private KMSUtil kmsUtil;
+    private KmsUtil kmsUtil;
     @Autowired
     private ConfigurableEnvironment environment;
 
     @Value("${spring.datasource.password}")
-    private String encryptedDbPassword;
+    private String dbPassword;
     @Value("${jwt.secret.key}")
-    private String encryptedJwtSecretKey;
+    private String jwtSecretKey;
 
     private static final String SPRING_DATASOURCE_PASSWORD = "spring.datasource.password";
     private static final String JWT_SECRET_KEY = "jwt.secret.key";
@@ -36,14 +36,14 @@ public class ConfigPropertiesInitializer {
     private static final Pattern ENC_PATTERN = Pattern.compile("^ENC\\((.+)\\)$");
 
     @PostConstruct
-    public void initializeProperties() {
-        log.info("Setting Properties AwsConfigPropertiesInitializer using PostConstruct Function");
+    private void initializeProperties() {
+        log.info("Setting Properties in ConfigPropertiesInitializer using PostConstruct Function");
 
         Map<String, Object> props = new HashMap<>();
 
         try {
-            String decryptedDbPassword = handleEncryptedProperty(encryptedDbPassword);
-            String decryptedJwtSecretKey = handleEncryptedProperty(encryptedJwtSecretKey);
+            String decryptedDbPassword = decryptIfEncrypted(dbPassword);
+            String decryptedJwtSecretKey = decryptIfEncrypted(jwtSecretKey);
 
             props.put(SPRING_DATASOURCE_PASSWORD, decryptedDbPassword);
             props.put(JWT_SECRET_KEY, decryptedJwtSecretKey);
@@ -55,15 +55,14 @@ public class ConfigPropertiesInitializer {
         }
     }
 
-    private String handleEncryptedProperty(String inputProperty) {
-        Matcher matcher = ENC_PATTERN.matcher(inputProperty);
+    private String decryptIfEncrypted(String propertyValue) {
+        Matcher matcher = ENC_PATTERN.matcher(propertyValue);
 
-        // If ENC(...) enclosed
         if (matcher.matches()) {
             String base64EncodedCipherText = matcher.group(1);
             return kmsUtil.decrypt(base64EncodedCipherText);
         } else {
-            return inputProperty;
+            return propertyValue;
         }
     }
 

@@ -1,4 +1,4 @@
-package com.demo.importer.config.aws;
+package com.demo.importer.util.aws;
 
 import java.util.Base64;
 
@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.kms.model.EncryptRequest;
 import software.amazon.awssdk.services.kms.model.EncryptResponse;
 
 @Component
-public class KMSUtil {
+public class KmsUtil {
 
     @Autowired
     private KmsClient kmsClient;

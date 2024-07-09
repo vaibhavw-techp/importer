@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.kms.KmsClient;
 
 
 @Configuration
-public class KMSConfig {
+public class KmsConfig {
 
     @Value("${aws.region}")
     private String appRegion;
