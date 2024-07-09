@@ -19,4 +19,10 @@ public class GlobalExceptionHandler {
         return new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
     }
 
+    @ExceptionHandler(PropertyDecryptionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDetails handlerPropertyDecryptionFailureException(IllegalTokenException ex, WebRequest request) {
+        return new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+    }
+
 }

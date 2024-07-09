@@ -1,6 +1,5 @@
 package com.demo.importer.service;
 
-import com.demo.importer.config.aws.KMSUtil;
 import com.demo.importer.dto.LogDisplayDto;
 import com.demo.importer.dto.StudentAdditionDto;
 import com.demo.importer.dto.StudentDisplayDto;
@@ -9,6 +8,7 @@ import com.demo.importer.entity.LogEntity;
 import com.demo.importer.exceptions.IllegalTokenException;
 import com.demo.importer.mapstruct.LogMapper;
 import com.demo.importer.repository.LogRepository;
+import com.demo.importer.util.aws.KmsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -36,13 +36,14 @@ public class StudentService {
     @Autowired
     private LogMapper logMapper;
     @Autowired
-    private KMSUtil kmsUtil;
+    private KmsUtil kmsUtil;
+
 
     public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        String token = extractToken(); //Extracted jwt token using SecurityContext
+        String token = extractToken();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -65,9 +66,8 @@ public class StudentService {
     }
 
     private void encryptSensitiveAttributes(StudentAdditionDto student) {
-        String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
+        String encryptedEmail = kmsUtil.encrypt(student.getEmail());
         student.setEmail(encryptedEmail);
-        System.out.println(student.getEmail());
     }
 
     private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
