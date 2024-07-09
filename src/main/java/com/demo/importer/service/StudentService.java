@@ -38,11 +38,12 @@ public class StudentService {
     @Autowired
     private KMSUtil kmsUtil;
 
+
     public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        String token = extractToken(); //Extracted jwt token using SecurityContext
+        String token = extractToken();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -65,9 +66,8 @@ public class StudentService {
     }
 
     private void encryptSensitiveAttributes(StudentAdditionDto student) {
-        String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
+        String encryptedEmail = kmsUtil.encrypt(student.getEmail());
         student.setEmail(encryptedEmail);
-        System.out.println(student.getEmail());
     }
 
     private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
