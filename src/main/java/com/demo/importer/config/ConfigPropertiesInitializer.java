@@ -1,12 +1,12 @@
 package com.demo.importer.config;
 
+import com.demo.importer.exceptions.PropertyDecryptionException;
 import com.demo.importer.util.aws.KmsUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 @Configuration
 @Slf4j
-@DependsOn("KmsUtil")
 public class ConfigPropertiesInitializer {
 
     @Autowired
@@ -41,26 +40,30 @@ public class ConfigPropertiesInitializer {
 
         Map<String, Object> props = new HashMap<>();
 
-        try {
-            String decryptedDbPassword = decryptIfEncrypted(dbPassword);
-            String decryptedJwtSecretKey = decryptIfEncrypted(jwtSecretKey);
+        String decryptedDbPassword = decryptIfEncrypted(dbPassword, SPRING_DATASOURCE_PASSWORD);
+        String decryptedJwtSecretKey = decryptIfEncrypted(jwtSecretKey, JWT_SECRET_KEY);
 
-            props.put(SPRING_DATASOURCE_PASSWORD, decryptedDbPassword);
-            props.put(JWT_SECRET_KEY, decryptedJwtSecretKey);
+        props.put(SPRING_DATASOURCE_PASSWORD, decryptedDbPassword);
+        props.put(JWT_SECRET_KEY, decryptedJwtSecretKey);
 
-            environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, props));
-            log.info("Properties Decrypted and set successfully.");
-        } catch (Exception e) {
-            log.error("Error decrypting properties", e);
-        }
+        environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, props));
+        log.info("Properties Decrypted and set successfully.");
     }
 
-    private String decryptIfEncrypted(String propertyValue) {
+    private String decryptIfEncrypted(String propertyValue, String propertyName) {
         Matcher matcher = ENC_PATTERN.matcher(propertyValue);
 
         if (matcher.matches()) {
             String base64EncodedCipherText = matcher.group(1);
-            return kmsUtil.decrypt(base64EncodedCipherText);
+            try{
+                return kmsUtil.decrypt(base64EncodedCipherText);
+            } catch (IllegalArgumentException ex) {
+                log.info("Failed to decrypt the Property: " + propertyName);
+                throw new PropertyDecryptionException(propertyName);
+            } catch (Exception ex) {
+                log.info("Unexpected Error occured");
+                throw new PropertyDecryptionException("Unexpected error occured while decrypting the property: ", propertyName);
+            }
         } else {
             return propertyValue;
         }
