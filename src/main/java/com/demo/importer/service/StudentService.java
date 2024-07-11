@@ -71,7 +71,6 @@ public class StudentService {
 
     private void encryptSensitiveAttributes(StudentAdditionDto student) {
         String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
-//        String tempSS = kmsUtil.kmsDecrypt(encryptedEmail);
         student.setEmail(encryptedEmail);
     }
 
