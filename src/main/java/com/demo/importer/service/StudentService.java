@@ -38,11 +38,16 @@ public class StudentService {
     @Autowired
     private KMSUtil kmsUtil;
 
+    @Value("${spring.datasource.password.decrypted}")
+    private String xyx;
+
     public List<LogDisplayDto> saveStudent(List<StudentAdditionDto> students) {
         List<LogDisplayDto> logDisplayDtos = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        String token = extractToken(); //Extracted jwt token using SecurityContext
+        String token = extractToken();
+
+        System.out.println("\n\n\n"+xyx);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -67,7 +72,6 @@ public class StudentService {
     private void encryptSensitiveAttributes(StudentAdditionDto student) {
         String encryptedEmail = kmsUtil.kmsEncrypt(student.getEmail());
         student.setEmail(encryptedEmail);
-        System.out.println(student.getEmail());
     }
 
     private void handleResponse(StudentAdditionDto student, int statusCode, String status, List<LogDisplayDto> logDisplayDtos) {
